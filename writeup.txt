@@ -1,0 +1,45 @@
+CSE 158 — Assignment 1 Writeup
+
+Overview
+This submission addresses the three tasks (Read, Category, Rating) using simple, reliable models that generate the required prediction files using the provided datasets and formats.
+
+Task 1: Read Prediction (pairs_Read.csv)
+- Approach: Binary classification with logistic regression over interaction-derived features.
+- Training data: train_Interactions.csv.gz
+- Features per (userID, bookID): user_avg, user_count, book_avg, book_count, user_centered, book_centered, user_popularity, book_popularity. These are computed from the training interactions.
+- Negative sampling: For each positive (observed) user–book pair, sample 3 negatives (books the user has not interacted with).
+- Model: StandardScaler (with_mean=False) + LogisticRegression (lbfgs, max_iter=500, class_weight=balanced).
+- Threshold: Predict 1 if P(read) ≥ 0.5, else 0.
+- Output: predictions_Read.csv with columns userID, bookID, prediction (0/1).
+
+Task 2: Category Prediction (test_Category.json.gz)
+- Approach: Text classification with TF-IDF features and logistic regression.
+- Training data: train_Category.json.gz (uses review_text and genreID).
+- Vectorization: TfidfVectorizer with English stopwords, lowercase, ngram_range=(1, 2), max_features=60,000, min_df=3.
+- Model: LogisticRegression (lbfgs, max_iter=1000).
+- Labels: Predict genreID among the five categories used in the assignment (Children’s, Comics/Graphic Novels, Fantasy, Mystery/Thriller, Romance).
+- Output: predictions_Category.csv with columns userID, reviewID, prediction (int genreID).
+
+Task 3: Rating Prediction (pairs_Rating.csv)
+- Approach: Biased matrix factorization with user/item biases and latent factors, optimized via SGD.
+- Training data: train_Interactions.csv.gz (userID, bookID, rating).
+- Hyperparameters: n_factors=60, n_epochs=20, learning_rate=0.01, reg=0.05 (random_state=42).
+- Cold-start handling: If a user or item was unseen in training, fall back to global mean plus available bias/vector terms from the seen side.
+- Output: predictions_Rating.csv with columns userID, bookID, prediction (float rating).
+
+Data and Formats
+- All input files are read from the assignment-provided datasets.
+- Output files strictly match the required schemas:
+  - predictions_Read.csv: userID, bookID, prediction
+  - predictions_Category.csv: userID, reviewID, prediction
+  - predictions_Rating.csv: userID, bookID, prediction
+
+Reproducibility
+- The repository includes a single entry point that produces the three outputs:
+  - python assignment1.py read
+  - python assignment1.py category
+  - python assignment1.py rating
+
+Notes
+- The solutions are intentionally simple and fast, intended to be stronger than the baselines while remaining easy to run and verify.
+
